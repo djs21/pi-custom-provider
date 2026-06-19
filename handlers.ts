@@ -14,8 +14,12 @@ export async function cmdNewProvider(mgr: ProviderManager, ctx: ExtensionCommand
   const name = await ctx.ui.input("Provider name:");
   if (!name) return;
 
-  const baseUrl = await ctx.ui.input("Base URL (https://...):");
-  if (!baseUrl) return;
+  let baseUrl: string | undefined;
+  while (!baseUrl) {
+    baseUrl = await ctx.ui.input("Base URL (https://...):");
+    if (baseUrl === undefined) return;
+    if (!baseUrl) ctx.ui.notify("✗ Base URL wajib diisi", "warning");
+  }
 
   const apiChoice = await ctx.ui.select("API type:", [
     "openai-completions — OpenAI-compatible (/v1)",
