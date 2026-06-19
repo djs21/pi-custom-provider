@@ -33,21 +33,14 @@ export default function (pi: ExtensionAPI) {
     description: "Custom provider manager — baru / edit / hapus / refresh models",
     handler: async (_args, ctx) => {
       const main = await ctx.ui.select("Pilih opsi:", [
-        "1. Provider dari daftar provider",
-        "2. Ollama",
-        "3. Custom provider",
-        "4. Hapus custom provider",
+        "1. Custom provider",
+        "2. Hapus custom provider",
         "x. Batal",
       ]);
       if (!main || main.startsWith("x")) return;
 
-      if (main.startsWith("4.")) {
+      if (main.startsWith("2.")) {
         await cmdDeleteProvider(mgr, ctx);
-        return;
-      }
-
-      if (!main.startsWith("3")) {
-        ctx.ui.notify("Fitur belum tersedia", "warning");
         return;
       }
 
