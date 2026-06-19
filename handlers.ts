@@ -25,7 +25,7 @@ export async function cmdNewProvider(mgr: ProviderManager, ctx: ExtensionCommand
   const api = apiChoice.startsWith("openai") ? "openai-completions" : "anthropic-messages";
 
   const apiKey = await ctx.ui.input("API Key:");
-  if (!apiKey) return;
+  if (!apiKey) { ctx.ui.notify("✗ API key wajib diisi", "warning"); return; }
 
   ctx.ui.notify("Fetching models...", "info");
   const result = await mgr.create({ name, baseUrl, api, apiKey });
