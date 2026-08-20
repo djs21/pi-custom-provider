@@ -23,7 +23,7 @@ export class HttpModelFetcher implements ModelFetcher {
     api: string,
     headers?: Record<string, string>,
   ): Promise<{ models: ModelDef[]; rawUrl: string }> {
-    const cleanUrl = baseUrl.replace(/\/+$/, "");
+    const cleanUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
     let url: string;
     let hdr: Record<string, string> = {};
 
