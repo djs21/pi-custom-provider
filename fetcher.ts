@@ -11,7 +11,7 @@ import type { ModelDef } from "./types.js";
 // ── Interface ─────────────────────────────────────────────────
 
 export interface ModelFetcher {
-  fetch(baseUrl: string, apiKey: string, api: string): Promise<{ models: ModelDef[]; rawUrl: string }>;
+  fetch(baseUrl: string, apiKey: string, api: string, headers?: Record<string, string>): Promise<{ models: ModelDef[]; rawUrl: string }>;
 }
 
 // ── Production adapter ────────────────────────────────────────
@@ -21,23 +21,31 @@ export class HttpModelFetcher implements ModelFetcher {
     baseUrl: string,
     apiKey: string,
     api: string,
+    headers?: Record<string, string>,
   ): Promise<{ models: ModelDef[]; rawUrl: string }> {
     const cleanUrl = baseUrl.replace(/\/+$/, "");
     let url: string;
-    let headers: Record<string, string> = {};
+    let hdr: Record<string, string> = {};
 
     if (api === "anthropic-messages") {
       url = `${cleanUrl}/models`;
-      headers["x-api-key"] = apiKey;
-      headers["anthropic-version"] = "2023-06-01";
-      headers["Content-Type"] = "application/json";
+      hdr["x-api-key"] = apiKey;
+      hdr["anthropic-version"] = "2023-06-01";
+      hdr["Content-Type"] = "application/json";
     } else {
       url = `${cleanUrl}/models`;
-      headers["Authorization"] = `Bearer ${apiKey}`;
-      headers["Content-Type"] = "application/json";
+      hdr["Authorization"] = `Bearer ${apiKey}`;
+      hdr["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(url, { headers });
+    // Merge provider headers (they override auth headers for same keys)
+    if (headers) {
+      for (const [k, v] of Object.entries(headers)) {
+        hdr[k] = v;
+      }
+    }
+
+    const response = await fetch(url, { headers: hdr });
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
@@ -88,8 +96,8 @@ export class HttpModelFetcher implements ModelFetcher {
         reasoning,
         input: input.length > 0 ? input : ["text"],
         cost,
-        contextWindow: (m.context_length ?? m.context_window ?? m.contextWindow ?? 128_000) as number,
-        maxTokens: (topProvider?.max_completion_tokens ?? m.max_tokens ?? m.maxTokens ?? 4096) as number,
+        contextWindow: (m.context_length ?? m.context_window ?? m.contextWindow ?? 256_000) as number,
+        maxTokens: (topProvider?.max_completion_tokens ?? m.max_tokens ?? m.maxTokens ?? 10_240) as number,
       };
     });
 
@@ -122,6 +130,7 @@ export class StubModelFetcher implements ModelFetcher {
     baseUrl: string,
     _apiKey: string,
     _api: string,
+    _headers?: Record<string, string>,
   ): Promise<{ models: ModelDef[]; rawUrl: string }> {
     if (this.shouldThrow) {
       throw this.shouldThrow;

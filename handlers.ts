@@ -35,8 +35,25 @@ export async function cmdNewProvider(mgr: ProviderManager, ctx: ExtensionCommand
     if (!apiKey) ctx.ui.notify("✗ API key wajib diisi", "warning");
   }
 
+  // Ask about browser headers
+  const useHeaders = await ctx.ui.confirm(
+    "Pakai browser headers untuk bypass Cloudflare?",
+    "Gunakan User-Agent, Accept, dan headers lainnya?"
+  );
+  const headers = useHeaders
+    ? {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9,id;q=0.8",
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Dest": "empty",
+      }
+    : undefined;
+
   ctx.ui.notify("Fetching models...", "info");
-  const result = await mgr.create({ name, baseUrl, api, apiKey });
+
+  const result = await mgr.create({ name, baseUrl, api, apiKey, headers });
 
   if (result.ok) {
     ctx.ui.notify(`✓ ${result.detail}`, "success");

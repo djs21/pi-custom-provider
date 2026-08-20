@@ -20,6 +20,7 @@ export interface ProviderManager {
     baseUrl: string;
     api: string;
     apiKey: string;
+    headers?: Record<string, string>;
   }): Promise<ProviderResult>;
 
   /** Rename an existing managed provider. */
@@ -90,7 +91,7 @@ export function createProviderManager(
       }
 
       try {
-        const { models, rawUrl } = await fetcher.fetch(input.baseUrl, input.apiKey, input.api);
+        const { models, rawUrl } = await fetcher.fetch(input.baseUrl, input.apiKey, input.api, input.headers);
 
         const config: ProviderConfig = {
           baseUrl: input.baseUrl,
@@ -98,6 +99,7 @@ export function createProviderManager(
           api: input.api,
           _managed: true,
           models,
+          headers: input.headers,
         };
 
         const data = store.read();
@@ -152,7 +154,7 @@ export function createProviderManager(
       provider.apiKey = apiKey;
 
       try {
-        const { models, rawUrl } = await fetcher.fetch(provider.baseUrl, apiKey, provider.api);
+        const { models, rawUrl } = await fetcher.fetch(provider.baseUrl, apiKey, provider.api, provider.headers);
         provider.models = mergeModels(provider.models, models);
 
         const data = store.read();
@@ -185,7 +187,7 @@ export function createProviderManager(
       }
 
       try {
-        const { models, rawUrl } = await fetcher.fetch(provider.baseUrl, provider.apiKey, provider.api);
+        const { models, rawUrl } = await fetcher.fetch(provider.baseUrl, provider.apiKey, provider.api, provider.headers);
         provider.models = mergeModels(provider.models, models);
 
         const data = store.read();
@@ -214,7 +216,7 @@ export function createProviderManager(
       for (const name of names) {
         const p = data.providers[name];
         try {
-          const { models } = await fetcher.fetch(p.baseUrl, p.apiKey, p.api);
+          const { models } = await fetcher.fetch(p.baseUrl, p.apiKey, p.api, p.headers);
           p.models = mergeModels(p.models, models);
           data.providers[name] = p;
           registry.unregister(name);
